@@ -1,53 +1,66 @@
+
 <?php
+// require_once 'include/config.php';
+// try {
+//     $conn = new PDO("pgsql:host=$dbHost;dbname=$dbName", $dbUser, $dbPass);
+//     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+//     $adminTypes = $conn->query("SELECT user_type_id, user_type FROM user_types WHERE status = 'active'")->fetchAll();
+//     $departments = $conn->query("SELECT department_id, department_name FROM departments WHERE status = 'active'")->fetchAll();
+//     $positions = $conn->query("SELECT position_id, position_name FROM positions WHERE status = 'active'")->fetchAll();
+//     $skills = $conn->query("SELECT skill_id, skill_name FROM skills WHERE status = 'active'")->fetchAll();
+// } catch (PDOException $e) {
+//     die("Error fetching data: " . $e->getMessage());
+// }
+// $message = '';
+// if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+//     $fullname = trim($_POST['fullname']);
+//     $email = trim($_POST['email']);
+//     $dob = trim($_POST['dob']);
+//     $adminType = $_POST['admin_type'];
+//     $department = $_POST['department'];
+//     $position = $_POST['position'];
+//     $skillsSelected = $_POST['skills'] ?? [];
+//     $details = trim($_POST['details']);
+//     $image = $_FILES['image'];
+//     if (empty($fullname) || empty($email) || empty($dob) || empty($adminType) || empty($department) || empty($position) || empty($details)) {
+//         $message = "Please fill in all required fields.";
+//     } else {
+//         $uploadDir = 'uploads/';
+//         $imageName = uniqid() . '-' . basename($image['name']);
+//         $targetFile = $uploadDir . $imageName;
 
-require_once 'include/config.php';
-$message = '';
+//         if (move_uploaded_file($image['tmp_name'], $targetFile)) {
+//             try {
+//                 $conn->beginTransaction();
+//                 $sql = "INSERT INTO employees (employee_name, employee_email, dob, user_type_id, department_id, position_id, profile_image, employee_details, created_at) 
+//                         VALUES (:fullname, :email, :dob, :adminType, :department, :position, :profile_image, :details, NOW())";
+//                 $stmt = $conn->prepare($sql);
+//                 $stmt->bindParam(':fullname', $fullname);
+//                 $stmt->bindParam(':email', $email);
+//                 $stmt->bindParam(':dob', $dob);
+//                 $stmt->bindParam(':adminType', $adminType);
+//                 $stmt->bindParam(':department', $department);
+//                 $stmt->bindParam(':position', $position);
+//                 $stmt->bindParam(':profile_image', $imageName);
+//                 $stmt->bindParam(':details', $details);
+//                 $stmt->execute();
+//                 $employeeId = $conn->lastInsertId();
+//                 foreach ($skillsSelected as $skillId) {
+//                     $conn->query("INSERT INTO employee_skills (employee_id, skill_id) VALUES ($employeeId, $skillId)");
+//                 }
+//                 $conn->commit();
+//                 $message = "Registration successful!";
+//             } catch (PDOException $e) {
+//                 $conn->rollBack();
+//                 $message = "Error: " . $e->getMessage();
+//             }
+//         } else {
+//             $message = "Failed to upload image.";
+//         }
+//     }
+// }
+?> 
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    
-    $fullname = trim($_POST['fullname']);
-    $username = trim($_POST['username']);
-    $email = trim($_POST['email']);
-    $password = trim($_POST['password']);
-    $image = $_FILES['image'];
-
-    if (empty($fullname) || empty($username) || empty($email) || empty($password)) {
-        $message = "Please fill in all required fields.";
-    } else {
-        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-        $uploadDir = 'uploads/';
-        $imageName = uniqid() . '-' . basename($image['name']);
-        $targetFile = $uploadDir . $imageName;
-
-        if (move_uploaded_file($image['tmp_name'], $targetFile)) {
-            
-            try {
-                $conn = new PDO("pgsql:host=$dbHost;dbname=$dbName", $dbUser, $dbPass);
-                $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-                $sql = "INSERT INTO users (full_name, username, email, password, profile_image, created_at) 
-                        VALUES (:fullname, :username, :email, :password, :profile_image, NOW())";
-
-                $stmt = $conn->prepare($sql);
-                $stmt->bindParam(':fullname', $fullname);
-                $stmt->bindParam(':username', $username);
-                $stmt->bindParam(':email', $email);
-                $stmt->bindParam(':password', $hashedPassword);
-                $stmt->bindParam(':profile_image', $imageName);
-                $stmt->execute();
-
-                $message = "Registration successful!";
-            } catch (PDOException $e) {
-                $message = "Error: " . $e->getMessage();
-            }
-
-            $conn = null; 
-        } else {
-            $message = "Failed to upload image.";
-        }
-    }
-}
-?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -55,61 +68,87 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - Employee Management System</title>
+    <link rel="stylesheet" href="registrationcss.css"/>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container vh-100 d-flex justify-content-center align-items-center">
-        <div class="card p-4 shadow-sm" style="width: 500px;">
-            <h3 class="text-center mb-4">Register</h3>
-            <?php if ($message): ?>
+<!-- <?php  
+            if ($message): ?>
                 <div class="alert alert-info"><?= htmlspecialchars($message) ?></div>
-            <?php endif; ?>
-
-            <form id="registerForm" action="" method="POST" enctype="multipart/form-data">
-                <div class="mb-3">
-                    <label for="fullname" class="form-label">Full Name</label>
-                    <input type="text" class="form-control" id="fullname" name="fullname" required>
+        <?php
+             endif;
+         ?> -->
+    <form class="form" method="POST" action="">
+        <h3 class="login-title">Registration</h3>
+            <div class="row mb-3">
+                <div class="col-md-4">
+                <label for="fullname" class="form-label">Full Name</label>
+                <input type="text" class="form-control" id="fullname" name="fullname" required>
                 </div>
-                <div class="mb-3">
-                    <label for="username" class="form-label">Username</label>
-                    <input type="text" class="form-control" id="username" name="username" required>
+                <div class="col-md-4">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" name="email" required>
                 </div>
-                <div class="mb-3">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="email" class="form-control" id="email" name="email" required>
+                <div class="col-md-4">
+                <label for="dob" class="form-label">Date of Birth</label>
+                <input type="date" class="form-control" id="dob" name="dob" required>
                 </div>
-                <div class="mb-3">
-                    <label for="password" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="password" name="password" required>
                 </div>
-                <div class="mb-3">
-                    <label for="birthday" class="form-label">Password</label>
-                    <input type="date" class="form-control" id="password" name="password" required>
-                </div>
-                <div class="mb-3">
-                    <label for="image" class="form-label">Profile Image</label>
-                    <input type="file" class="form-control" id="image" name="image" accept="image/*" required>
-                </div>
-                <button type="submit" class="btn btn-primary w-100">Register</button>
-            </form>
-            <p class="text-center mt-3">Already have an account? <a href="login.php">Login</a></p>
-        </div>
+                <div class="row mb-3">
+                <div class="col-md-4">
+                <label for="image" class="form-label">Profile Image</label>
+                <input type="file" class="form-control" id="image" name="image" accept="image/" required>
+            </div>
+            <div class="col-md-4">
+                <label for="admin_type" class="form-label">Admin Type</label>
+                <select class="form-control" id="admin_type" name="admin_type" required>
+                    <option value="">Select Admin Type</option>
+                    <?php foreach ($adminTypes as $type): ?>
+                        <option value="<?= $type['user_type_id'] ?>"><?= htmlspecialchars($type['user_type']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="department" class="form-label">Department</label>
+                <select class="form-control" id="department" name="department" required>
+                    <option value="">Select Department</option>
+                    <?php foreach ($departments as $dept): ?>
+                        <option value="<?= $dept['department_id'] ?>"><?= htmlspecialchars($dept['department_name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+                    </div>
+                    <div class="row mb-3">
+                    <div class="col-md-4">
+                <label for="position" class="form-label">Position</label>
+                <select class="form-control" id="position" name="position" required>
+                    <option value="">Select Position</option>
+                    <?php foreach ($positions as $pos): ?>
+                        <option value="<?= $pos['position_id'] ?>"><?= htmlspecialchars($pos['position_name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="skills" class="form-label">Skills</label>
+                <select class="form-control" id="skills" name="skills" required>
+                <option value="">Select Skill</option>
+                    <?php foreach ($skills as $skill): ?>
+                        <option value="<?= $skill['skill_id'] ?>"><?= htmlspecialchars($skill['skill_name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="details" class="form-label">Enter Your Details</label>
+                <textarea class="form-control" id="details" name="details" rows="3" required></textarea>
+            </div>
+                    </div>
+            <button type="submit" class="btn btn-primary w-100">Register</button>
+            <p class="link">Already have an account? <a href="login.php">Login here</a></p>
+        </form>
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.getElementById('registerForm').addEventListener('submit', function (e) {
-            const fullname = document.getElementById('fullname').value.trim();
-            const username = document.getElementById('username').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value.trim();
-            const image = document.getElementById('image').value.trim();
 
-            if (!fullname || !username || !email || !password || !image) {
-                e.preventDefault();
-                alert('Please fill in all fields.');
-            }
-        });
-    </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
