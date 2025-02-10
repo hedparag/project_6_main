@@ -5,7 +5,6 @@ try {
 
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $adminTypes = $conn->query("SELECT user_type_id, user_type FROM user_types WHERE status = TRUE")->fetchAll();
-
     $departments = $conn->query("SELECT department_id, department_name FROM departments WHERE status = TRUE")->fetchAll();
     $positions = $conn->query("SELECT position_id, position_name FROM positions WHERE status = TRUE")->fetchAll();
 
@@ -20,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $adminType = $_POST['admin_type'];
     $department = $_POST['department'];
     $position = $_POST['position'];
-    $skills = trim($_POST['skills']); // Get skills as a string
+    $skills = trim($_POST['skills']);
     $details = trim($_POST['details']);
     $image = $_FILES['image'];
     
