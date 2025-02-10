@@ -1,66 +1,70 @@
-
 <?php
-// require_once 'include/config.php';
-// try {
-//     $conn = new PDO("pgsql:host=$dbHost;dbname=$dbName", $dbUser, $dbPass);
-//     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-//     $adminTypes = $conn->query("SELECT user_type_id, user_type FROM user_types WHERE status = 'active'")->fetchAll();
-//     $departments = $conn->query("SELECT department_id, department_name FROM departments WHERE status = 'active'")->fetchAll();
-//     $positions = $conn->query("SELECT position_id, position_name FROM positions WHERE status = 'active'")->fetchAll();
-//     $skills = $conn->query("SELECT skill_id, skill_name FROM skills WHERE status = 'active'")->fetchAll();
-// } catch (PDOException $e) {
-//     die("Error fetching data: " . $e->getMessage());
-// }
-// $message = '';
-// if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-//     $fullname = trim($_POST['fullname']);
-//     $email = trim($_POST['email']);
-//     $dob = trim($_POST['dob']);
-//     $adminType = $_POST['admin_type'];
-//     $department = $_POST['department'];
-//     $position = $_POST['position'];
-//     $skillsSelected = $_POST['skills'] ?? [];
-//     $details = trim($_POST['details']);
-//     $image = $_FILES['image'];
-//     if (empty($fullname) || empty($email) || empty($dob) || empty($adminType) || empty($department) || empty($position) || empty($details)) {
-//         $message = "Please fill in all required fields.";
-//     } else {
-//         $uploadDir = 'uploads/';
-//         $imageName = uniqid() . '-' . basename($image['name']);
-//         $targetFile = $uploadDir . $imageName;
+require_once 'include/config.php';
+try {
+    $conn = $pdo; 
 
-//         if (move_uploaded_file($image['tmp_name'], $targetFile)) {
-//             try {
-//                 $conn->beginTransaction();
-//                 $sql = "INSERT INTO employees (employee_name, employee_email, dob, user_type_id, department_id, position_id, profile_image, employee_details, created_at) 
-//                         VALUES (:fullname, :email, :dob, :adminType, :department, :position, :profile_image, :details, NOW())";
-//                 $stmt = $conn->prepare($sql);
-//                 $stmt->bindParam(':fullname', $fullname);
-//                 $stmt->bindParam(':email', $email);
-//                 $stmt->bindParam(':dob', $dob);
-//                 $stmt->bindParam(':adminType', $adminType);
-//                 $stmt->bindParam(':department', $department);
-//                 $stmt->bindParam(':position', $position);
-//                 $stmt->bindParam(':profile_image', $imageName);
-//                 $stmt->bindParam(':details', $details);
-//                 $stmt->execute();
-//                 $employeeId = $conn->lastInsertId();
-//                 foreach ($skillsSelected as $skillId) {
-//                     $conn->query("INSERT INTO employee_skills (employee_id, skill_id) VALUES ($employeeId, $skillId)");
-//                 }
-//                 $conn->commit();
-//                 $message = "Registration successful!";
-//             } catch (PDOException $e) {
-//                 $conn->rollBack();
-//                 $message = "Error: " . $e->getMessage();
-//             }
-//         } else {
-//             $message = "Failed to upload image.";
-//         }
-//     }
-// }
-?> 
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $adminTypes = $conn->query("SELECT user_type_id, user_type FROM user_types WHERE status = TRUE")->fetchAll();
 
+    $departments = $conn->query("SELECT department_id, department_name FROM departments WHERE status = TRUE")->fetchAll();
+    $positions = $conn->query("SELECT position_id, position_name FROM positions WHERE status = TRUE")->fetchAll();
+
+} catch (PDOException $e) {
+    die("Error fetching data: " . $e->getMessage());
+}
+$message = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $fullname = trim($_POST['fullname']);
+    $email = trim($_POST['email']);
+    $dob = trim($_POST['dob']);
+    $adminType = $_POST['admin_type'];
+    $department = $_POST['department'];
+    $position = $_POST['position'];
+    $skills = trim($_POST['skills']); // Get skills as a string
+    $details = trim($_POST['details']);
+    $image = $_FILES['image'];
+    
+    if (empty($fullname) || empty($email) || empty($dob) || empty($adminType) || empty($department) || empty($position) || empty($details)) {
+        $message = "Please fill in all required fields.";
+    } else {
+        $uploadDir = 'uploads/';
+        $imageName = uniqid() . '-' . basename($image['name']);
+        $targetFile = $uploadDir . $imageName;
+
+        if (move_uploaded_file($image['tmp_name'], $targetFile)) {
+            try {
+                $conn->beginTransaction();
+                $sql = "INSERT INTO employees (employee_name, employee_email, dob, user_type_id, department_id, position_id, profile_image, employee_details, created_at) 
+                        VALUES (:fullname, :email, :dob, :adminType, :department, :position, :profile_image, :details, NOW())";
+                $stmt = $conn->prepare($sql);
+                $stmt->bindParam(':fullname', $fullname);
+                $stmt->bindParam(':email', $email);
+                $stmt->bindParam(':dob', $dob);
+                $stmt->bindParam(':adminType', $adminType);
+                $stmt->bindParam(':department', $department);
+                $stmt->bindParam(':position', $position);
+                $stmt->bindParam(':profile_image', $imageName);
+                $stmt->bindParam(':details', $details);
+                $stmt->execute();
+                $employeeId = $conn->lastInsertId();
+
+                // Store skills as a comma-separated list
+                if (!empty($skills)) {
+                    $conn->query("INSERT INTO employee_skills (employee_id, skills) VALUES ($employeeId, '$skills')");
+                }
+
+                $conn->commit();
+                $message = "Registration successful!";
+            } catch (PDOException $e) {
+                $conn->rollBack();
+                $message = "Error: " . $e->getMessage();
+            }
+        } else {
+            $message = "Failed to upload image.";
+        }
+    }
+}
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -72,13 +76,13 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-<!-- <?php  
+<?php  
             if ($message): ?>
                 <div class="alert alert-info"><?= htmlspecialchars($message) ?></div>
         <?php
              endif;
-         ?> -->
-    <form class="form" method="POST" action="">
+         ?>
+    <form class="form" method="POST" action="" enctype="multipart/form-data">
         <h3 class="login-title">Registration</h3>
             <div class="row mb-3">
                 <div class="col-md-4">
@@ -97,7 +101,7 @@
                 <div class="row mb-3">
                 <div class="col-md-4">
                 <label for="image" class="form-label">Profile Image</label>
-                <input type="file" class="form-control" id="image" name="image" accept="image/" required>
+                <input type="file" class="form-control" id="image" name="image" accept="image/*" required>
             </div>
             <div class="col-md-4">
                 <label for="admin_type" class="form-label">Admin Type</label>
@@ -129,13 +133,8 @@
                 </select>
             </div>
             <div class="col-md-4">
-                <label for="skills" class="form-label">Skills</label>
-                <select class="form-control" id="skills" name="skills" required>
-                <option value="">Select Skill</option>
-                    <?php foreach ($skills as $skill): ?>
-                        <option value="<?= $skill['skill_id'] ?>"><?= htmlspecialchars($skill['skill_name']) ?></option>
-                    <?php endforeach; ?>
-                </select>
+                <label for="skills" class="form-label">Enter Your Skills</label>
+                <textarea class="form-control" id="skills" name="skills" rows="3"></textarea>
             </div>
             <div class="col-md-4">
                 <label for="details" class="form-label">Enter Your Details</label>
@@ -146,8 +145,6 @@
             <p class="link">Already have an account? <a href="login.php">Login here</a></p>
         </form>
     </div>
-</div>
-
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>

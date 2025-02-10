@@ -1,15 +1,25 @@
+
 <?php
-// $con = mysqli_connect("localhost:4306","root","","LoginSystem");
-// echo "Yor are connected to the database!";
-// if(mysqli_connect_errno()){
-//     echo "Failed to connect to PostgreSQL: " . mysqli_connect_error();
-// }
+// $host = 'localhost'; 
+// $dbname = 'my_db'; 
+// $user = 'postgres'; 
+// $password = '1234'; 
+
+// $conn_string = "host=$host dbname=$dbname user=$user password=$password";
+// $dbconn = pg_connect($conn_string);
 ?>
+
+
 <?php
-$dbHost = 'localhost:5432'; 
-$dbName = 'postgres'; 
-$dbUser = 'postgres'; 
-$dbPass = '1234'; 
+$host = "localhost";
+$dbname = "my_db";
+$user = "postgres";
+$password = "1234";
 
-
+try {
+    $pdo = new PDO("pgsql:host=$host;dbname=$dbname", $user, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    die("Database connection failed: " . $e->getMessage());
+}
 ?>
