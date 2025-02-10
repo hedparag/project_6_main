@@ -46,8 +46,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->bindParam(':details', $details);
                 $stmt->execute();
                 $employeeId = $conn->lastInsertId();
-
-                // Store skills as a comma-separated list
                 if (!empty($skills)) {
                     $conn->query("INSERT INTO employee_skills (employee_id, skills) VALUES ($employeeId, '$skills')");
                 }
