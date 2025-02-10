@@ -1,16 +1,16 @@
 <?php
-session_start();
-if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
-    exit();
-}
+// session_start();
+// if (!isset($_SESSION['user_id'])) {
+//     header('Location: logout2.php');
+//     exit();
+// }
 
-if (isset($_GET['logout'])) {
-    session_unset();
-    session_destroy();
-    header('Location: login.php');
-    exit();
-}
+// if (isset($_GET['logout'])) {
+//     session_unset();
+//     session_destroy();
+//     header('Location: logout2.php');
+//     exit();
+// }
 ?>
 
 <!DOCTYPE html>
