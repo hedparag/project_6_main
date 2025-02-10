@@ -13,4 +13,8 @@ try {
 } catch (PDOException $e) {
     echo "Connection failed: " . $e->getMessage();
 }
+<<<<<<< HEAD
 ?>
+=======
+?>
+>>>>>>> origin/feature/login
