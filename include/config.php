@@ -14,7 +14,11 @@ try {
     echo "Connection failed: " . $e->getMessage();
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
 ?>
 =======
 ?>
 >>>>>>> origin/feature/login
+=======
+?>
+>>>>>>> origin/feature/retistration
