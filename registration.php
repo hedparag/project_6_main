@@ -8,6 +8,7 @@ try {
     $adminTypes = $conn->query("SELECT user_type_id, user_type FROM user_types WHERE status = TRUE")->fetchAll();
     $departments = $conn->query("SELECT department_id, department_name FROM departments WHERE status = TRUE")->fetchAll();
     $positions = $conn->query("SELECT position_id, position_name FROM positions WHERE status = TRUE")->fetchAll();
+    $skills = ['PHP', 'JavaScript', 'Python', 'Java'];
 } catch (PDOException $e) {
     die("Error fetching data: " . $e->getMessage());
 }
@@ -21,58 +22,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $adminType = $_POST['admin_type'];
     $department = $_POST['department'];
     $position = $_POST['position'];
-    $skills = trim($_POST['employee_skills']);
+    $skills = $_POST['employee_skills'];
     $details = trim($_POST['details']);
     
     $profileImagePath = NULL;
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM employees WHERE employee_email = :email");
+    $stmt->bindParam(':email', $email);
+    $stmt->execute();
+    if ($stmt->fetchColumn() > 0) {
+        $message = "Email is already registered.";
+    } 
+    elseif (strlen($phone) !== 10 || !is_numeric($phone)) {
+        $message = "Phone number must be exactly 10 digits.";
+    } 
+    else {
+        if (!empty($_FILES['profile_image']['name'])) {
+            $uploadDir = 'uploads/';
+            $profileImageName = time() . '_' . basename($_FILES['profile_image']['name']);
+            $targetFilePath = $uploadDir . $profileImageName;
+            $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            $fileType = mime_content_type($_FILES['profile_image']['tmp_name']);
 
-    // Handle file upload
-    if (!empty($_FILES['profile_image']['name'])) {
-        $uploadDir = 'uploads/'; // Ensure this directory exists
-        $profileImageName = time() . '_' . basename($_FILES['profile_image']['name']);
-        $targetFilePath = $uploadDir . $profileImageName;
-
-        // Validate file type
-        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        $fileType = mime_content_type($_FILES['profile_image']['tmp_name']);
-
-        if (in_array($fileType, $allowedTypes)) {
-            if (move_uploaded_file($_FILES['profile_image']['tmp_name'], $targetFilePath)) {
-                $profileImagePath = $targetFilePath;
+            if (in_array($fileType, $allowedTypes)) {
+                if (move_uploaded_file($_FILES['profile_image']['tmp_name'], $targetFilePath)) {
+                    $profileImagePath = $targetFilePath;
+                } else {
+                    $message = "Error uploading the profile image.";
+                }
             } else {
-                $message = "Error uploading the profile image.";
+                $message = "Invalid file format. Only JPG, PNG, GIF, and WEBP are allowed.";
             }
-        } else {
-            $message = "Invalid file format. Only JPG, PNG, GIF, and WEBP are allowed.";
         }
-    }
+        $today = date("Y-m-d");
+        if ($dob > $today) {
+            $message = "Date of Birth cannot be in the future.";
+        }
+        if (empty($message)) {
+            try {
+                $conn->beginTransaction();
+                $sql = "INSERT INTO employees (employee_name, employee_email, dob, employee_phone, user_type_id, department_id, position_id, employee_skills, employee_details, profile_image, created_at) 
+                        VALUES (:fullname, :email, :dob, :phone, :adminType, :department, :position, :skills, :details, :profile_image, NOW())";
 
-    if (empty($fullname) || empty($email) || empty($dob) || empty($phone) || empty($adminType) || empty($department) || empty($position) || empty($details)) {
-        $message = "Please fill in all required fields.";
-    } else {
-        try {
-            $conn->beginTransaction();
-            $sql = "INSERT INTO employees (employee_name, employee_email, dob, employee_phone, user_type_id, department_id, position_id, employee_skills, employee_details, profile_image, created_at) 
-                    VALUES (:fullname, :email, :dob, :phone, :adminType, :department, :position, :skills, :details, :profile_image, NOW())";
+                $stmt = $conn->prepare($sql);
+                $stmt->bindParam(':fullname', $fullname);
+                $stmt->bindParam(':email', $email);
+                $stmt->bindParam(':dob', $dob);
+                $stmt->bindParam(':phone', $phone);
+                $stmt->bindParam(':adminType', $adminType);
+                $stmt->bindParam(':department', $department);
+                $stmt->bindParam(':position', $position);
+                $stmt->bindParam(':skills', $skills);
+                $stmt->bindParam(':details', $details); 
+                $stmt->bindParam(':profile_image', $profileImagePath);
+                $stmt->execute();
 
-            $stmt = $conn->prepare($sql);
-            $stmt->bindParam(':fullname', $fullname);
-            $stmt->bindParam(':email', $email);
-            $stmt->bindParam(':dob', $dob);
-            $stmt->bindParam(':phone', $phone);
-            $stmt->bindParam(':adminType', $adminType);
-            $stmt->bindParam(':department', $department);
-            $stmt->bindParam(':position', $position);
-            $stmt->bindParam(':skills', $skills);
-            $stmt->bindParam(':details', $details); // Bind details field
-            $stmt->bindParam(':profile_image', $profileImagePath);
-            $stmt->execute();
-
-            $conn->commit();
-            $message = "Registration successful!";
-        } catch (PDOException $e) {
-            $conn->rollBack();
-            $message = "Error: " . $e->getMessage();
+                $conn->commit();
+                $message = "Registration successful!";
+            } catch (PDOException $e) {
+                $conn->rollBack();
+                $message = "Error: " . $e->getMessage();
+            }
         }
     }
 }
@@ -91,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php if ($message): ?>
     <div class="alert alert-info"><?= htmlspecialchars($message) ?></div>
 <?php endif; ?>
-
+<div class="container">
 <form class="form" method="POST" action="" enctype="multipart/form-data">
     <h3 class="login-title">Registration</h3>
     
@@ -106,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         <div class="col-md-4">
             <label for="dob" class="form-label">Date of Birth</label>
-            <input type="date" class="form-control" id="dob" name="dob" required>
+            <input type="date" class="form-control" id="dob" name="dob" max="<?= date('Y-m-d') ?>" required>
         </div>
     </div>
 
@@ -136,7 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <div class="row mb-3">
-        <div class="col-md-6">
+        <div class="col-md-4">
             <label for="position" class="form-label">Position</label>
             <select class="form-control" id="position" name="position" required>
                 <option value="">Select Position</option>
@@ -145,26 +154,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php endforeach; ?>
             </select>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
+            <label for="profile_image" class="form-label">Profile Image</label>
+            <input type="file" class="form-control" id="profile_image" name="profile_image" accept="image/*">
+        </div>
+        <div class="col-md-4">
             <label for="employee_skills" class="form-label">Skills</label>
-            <textarea class="form-control" id="employee_skills" name="employee_skills" rows="2"></textarea>
+            <select class="form-control" id="employee_skills" name="employee_skills" required>
+                <option value="">Select Skill</option>
+                <?php foreach ($skills as $skill): ?>
+                    <option value="<?= $skill ?>"><?= $skill ?></option>
+                <?php endforeach; ?>
+            </select>
         </div>
     </div>
-
     <div class="row mb-3">
         <div class="col-md-12">
             <label for="details" class="form-label">Details</label>
             <textarea class="form-control" id="details" name="details" rows="4" required></textarea>
         </div>
     </div>
-
-    <div class="mb-3">
-        <label for="profile_image" class="form-label">Profile Image</label>
-        <input type="file" class="form-control" id="profile_image" name="profile_image" accept="image/*">
-    </div>
-
     <button type="submit" class="btn btn-primary w-100">Register</button>
+    <p class="mt-3">Already have an account? <a href="login.php">Login here</a></p>
 </form>
+</div>
 
 </body>
 </html>

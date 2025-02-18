@@ -1,16 +1,4 @@
 <?php
-// session_start();
-// if (!isset($_SESSION['user_id'])) {
-//     header('Location: logout2.php');
-//     exit();
-// }
-
-// if (isset($_GET['logout'])) {
-//     session_unset();
-//     session_destroy();
-//     header('Location: logout2.php');
-//     exit();
-// }
 ?>
 
 <!DOCTYPE html>
@@ -23,7 +11,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <!-- <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
             <a class="navbar-brand" href="dashboard.php">Employee Management</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -43,7 +31,7 @@
                 </ul>
             </div>
         </div>
-    </nav>
+    </nav> -->
     <div class="container">
         <div class="card">
             <h3 class="card-title">Logout Successful</h3>
