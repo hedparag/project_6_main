@@ -31,8 +31,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $message = "Current password is incorrect.";
     }
 }
-
-// include 'navbar.php';
 ?>
 
 <!DOCTYPE html>
