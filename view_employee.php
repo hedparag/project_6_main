@@ -21,7 +21,15 @@ if ($employee_id === false) {
     die("Invalid Employee ID"); 
 }
 
-$stmt = $pdo->prepare("SELECT * FROM employees WHERE employee_id = ?");
+$stmt = $pdo->prepare("
+    SELECT e.*, d.department_name, p.position_name, u.user_type 
+    FROM employees e
+    LEFT JOIN departments d ON e.department_id = d.department_id
+    LEFT JOIN positions p ON e.position_id = p.position_id
+    LEFT JOIN user_types u ON e.user_type_id = u.user_type_id
+    WHERE e.employee_id = ?
+");
+
 $stmt->execute([$employee_id]);
 $employee = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -121,9 +129,7 @@ if (!$employee) {
                 <li class="nav-item">
                     <a class="nav-link" href="dashboard.php">Dashboard</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="edit_employee.php?id=<?= $user_id; ?>">My Profile</a>
-                </li>
+                <li class="nav-item"><a class="nav-link" href="admin_profile.php">My Profile</a></li>
                 <li class="nav-item">
                     <a class="nav-link text-danger" href="logout.php">Logout</a>
                 </li>
@@ -145,15 +151,10 @@ if (!$employee) {
                     <h5 class="card-title"><?= htmlspecialchars($employee['employee_name']); ?></h5>
                     <p><strong>Email:</strong> <?= htmlspecialchars($employee['employee_email']); ?></p>
                     <p><strong>Phone:</strong> <?= htmlspecialchars($employee['employee_phone']); ?></p>
-                    <p><strong>Department:</strong> <?= htmlspecialchars($employee['department_id']); ?></p>
-                    <p><strong>Position:</strong> <?= htmlspecialchars($employee['position_id']); ?></p>
+                    <p><strong>Department:</strong> <?= htmlspecialchars($employee['department_name']); ?></p>
+                    <p><strong>Position:</strong> <?= htmlspecialchars($employee['position_name']); ?></p>
                     <p><strong>Date of Birth:</strong> <?= htmlspecialchars($employee['dob']); ?></p>
-                    <p><strong>User Type:</strong> 
-                        <?php
-                            $user_type = $employee['user_type_id'] == 3 ? 'Admin' : 'Employee';
-                            echo "<span class='badge-custom badge-info'>$user_type</span>";
-                        ?>
-                    </p>
+                    <p><strong>User Type:</strong> <span class="badge-custom badge-info"><?= htmlspecialchars($employee['user_type']); ?></p>
                     <p><strong>Skills:</strong> <?= htmlspecialchars($employee['employee_skills']); ?></p>
                     <p><strong>Details:</strong> <?= htmlspecialchars($employee['employee_details']); ?></p>
 
