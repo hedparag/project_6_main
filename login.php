@@ -170,6 +170,8 @@ if (isset($_SESSION['user_id'])) {
                             </div>
 
                             <button type="submit" class="btn btn-primary btn-block">Login</button>
+                            
+                            <p class="mt-3">Don't have an account? <a href="registration.php">Register here</a></p>
                         </form>
                     </div>
                 </div>

@@ -25,12 +25,6 @@ $stmt = $pdo->prepare("SELECT * FROM employees WHERE employee_id = ?");
 $stmt->execute([$employee_id]);
 $employee = $stmt->fetch(PDO::FETCH_ASSOC);
 
-
-// $employee_id = $_GET['id'];
-// $stmt = $pdo->prepare("SELECT * FROM employees WHERE employee_id = ?");
-// $stmt->execute([$employee_id]);
-// $employee = $stmt->fetch(PDO::FETCH_ASSOC);
-
 if (!$employee) {
     echo "Employee not found!";
     exit();
@@ -43,7 +37,7 @@ if (!$employee) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>View Employee - Employee Management System</title>
-    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -116,21 +110,28 @@ if (!$employee) {
     </style>
 </head>
 <body>
-
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
     <div class="container">
-        <a class="navbar-brand" href="dashboard.php">Employee Management</a>
+        <a class="navbar-brand" href="#">Employee Management</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" href="dashboard.php">Dashboard</a></li>
-                <li class="nav-item"><a class="nav-link" href="logout.php">Logout</a></li>
+                <li class="nav-item">
+                    <a class="nav-link" href="dashboard.php">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="edit_employee.php?id=<?= $user_id; ?>">My Profile</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-danger" href="logout.php">Logout</a>
+                </li>
             </ul>
         </div>
     </div>
 </nav>
+
 
 <div class="container mt-4">
     <h3 class="text-center mb-4">Employee Details</h3>
