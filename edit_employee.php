@@ -44,56 +44,60 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $details = trim($_POST['details']);
     $user_type = $is_admin ? ($_POST['user_type'] ?? $employee['user_type_id']) : $employee['user_type_id'];
     $profile_img = $employee['profile_image'];
+
     if (empty($name) || strlen($name) < 3) {
         $errors[] = "Full Name must be at least 3 characters.";
     } elseif (!preg_match("/^[a-zA-Z\s]+$/", $name)) {
         $errors[] = "Full Name must only contain alphabetic characters and spaces.";
     }
-    
+
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errors[] = "Invalid email format.";
     }
-    
+
     if (empty($phone) || !preg_match('/^[0-9]{10}$/', $phone)) {
         $errors[] = "Phone must be 10 digits.";
     }
-    
+
     if (empty($dob)) {
         $errors[] = "Date of Birth is required.";
     }
-    
+
     if (empty($department)) {
         $errors[] = "Department is required.";
     }
-    
+
     if (empty($position)) {
         $errors[] = "Position is required.";
     }
-    
+
     if ($is_admin && empty($user_type)) {
         $errors[] = "User Type is required.";
     }
-    
-    if (empty($skills) || strlen($skills) < 5) {
-        $errors[] = "Skills must be at least 5 characters.";
-    } elseif (!preg_match("/^[a-zA-Z, ]+$/", $skills)) {
+
+    if (!preg_match("/^[a-zA-Z, ]+$/", $skills)) {
         $errors[] = "Skills must only contain letters and commas (e.g., PHP, JavaScript).";
     }
-    
+
     if (empty($details) || strlen($details) < 5) {
         $errors[] = "Details must be at least 5 characters.";
     }
+
     if (!empty($_FILES['profile']['name'])) {
-        $allowed_types = ['image/jpeg', 'image/png', 'image/jpg'];
-        if (!in_array($_FILES['profile']['type'], $allowed_types)) {
-            $errors[] = "Profile image must be JPG or PNG.";
-        }
         if ($_FILES['profile']['size'] > 2 * 1024 * 1024) { 
             $errors[] = "Profile image must be under 2MB.";
         }
     }
-    if ($is_admin && !empty($_POST['password']) && strlen($_POST['password']) < 6) {
-        $errors[] = "Password must be at least 6 characters.";
+
+    // Password update logic
+    if (!empty($_POST['password'])) {
+        if (($is_admin || $employee_id == $user_id) && $employee['status'] == 1) {
+            $password = password_hash($_POST['password'], PASSWORD_BCRYPT);
+            $updateUserStmt = $pdo->prepare("UPDATE users SET password = ? WHERE employee_id = ?");
+            $updateUserStmt->execute([$password, $employee_id]);
+        } else {
+            $errors[] = "Password cannot be changed as the employee is not approved.";
+        }
     }
 
     if (empty($errors)) {
@@ -109,12 +113,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                          SET employee_name = ?, employee_email = ?, employee_phone = ?, dob = ?, department_id = ?, position_id = ?, user_type_id = ?, employee_skills = ?, employee_details = ?, profile_image = ? 
                                          WHERE employee_id = ?");
             $updateStmt->execute([$name, $email, $phone, $dob, $department, $position, $user_type, $skills, $details, $profile_img, $employee_id]);
-
-            if ($is_admin && !empty($_POST['password'])) {
-                $password = password_hash($_POST['password'], PASSWORD_BCRYPT);
-                $updateUserStmt = $pdo->prepare("UPDATE users SET password = ? WHERE employee_id = ?");
-                $updateUserStmt->execute([$password, $employee_id]);
-            }
 
             header("Location: dashboard.php");
             exit();
@@ -137,88 +135,48 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <div class="container mt-5">
     <h2>Edit Employee</h2>
     <form method="POST" enctype="multipart/form-data">
-    <div class="mb-3 text-center">
-        <img src="<?= $employee['profile_image'] ?: 'images/default.jpg'; ?>" class="img-thumbnail" width="150">
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Profile Picture</label>
-        <input type="file" name="profile" class="form-control">
-        <?php if (in_array("Profile image must be JPG or PNG.", $errors) || in_array("Profile image must be under 2MB.", $errors)): ?>
-            <div class="text-danger">
-                <?php foreach ($errors as $error): ?>
-                    <?php if (strpos($error, 'Profile image') !== false): ?>
-                        <p><?= htmlspecialchars($error) ?></p>
-                    <?php endif; ?>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Full Name</label>
-        <input type="text" name="name" class="form-control" value="<?= htmlspecialchars($employee['employee_name']) ?>" required>
-        <?php if (in_array("Full Name must be at least 3 characters.", $errors) || in_array("Full Name must only contain alphabetic characters and spaces.", $errors)): ?>
-            <div class="text-danger">
-                <?php foreach ($errors as $error): ?>
-                    <?php if (strpos($error, 'Full Name') !== false): ?>
-                        <p><?= htmlspecialchars($error) ?></p>
-                    <?php endif; ?>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Email</label>
-        <input type="email" name="email" class="form-control" value="<?= htmlspecialchars($employee['employee_email']) ?>" required>
-        <?php if (in_array("Invalid email format.", $errors)): ?>
-            <div class="text-danger"><?= htmlspecialchars("Invalid email format.") ?></div>
-        <?php endif; ?>
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Phone</label>
-        <input type="text" name="phone" class="form-control" value="<?= htmlspecialchars($employee['employee_phone']) ?>">
-        <?php if (in_array("Phone must be 10 digits.", $errors)): ?>
-            <div class="text-danger"><?= htmlspecialchars("Phone must be 10 digits.") ?></div>
-        <?php endif; ?>
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Date of Birth</label>
-        <input type="date" name="dob" class="form-control" value="<?= htmlspecialchars($employee['dob']) ?>">
-        <?php if (in_array("Date of Birth is required.", $errors)): ?>
-            <div class="text-danger"><?= htmlspecialchars("Date of Birth is required.") ?></div>
-        <?php endif; ?>
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Skills</label>
-        <textarea name="skills" class="form-control" rows="4"><?= htmlspecialchars($employee['employee_skills']) ?></textarea>
-        <?php if (in_array("Skills must be at least 5 characters.", $errors) || in_array("Skills must only contain letters and commas (e.g., PHP, JavaScript).", $errors)): ?>
-            <div class="text-danger">
-                <?php foreach ($errors as $error): ?>
-                    <?php if (strpos($error, 'Skills') !== false): ?>
-                        <p><?= htmlspecialchars($error) ?></p>
-                    <?php endif; ?>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Details</label>
-        <textarea name="details" class="form-control"><?= htmlspecialchars($employee['employee_details']) ?></textarea>
-        <?php if (in_array("Details must be at least 5 characters.", $errors)): ?>
-            <div class="text-danger"><?= htmlspecialchars("Details must be at least 5 characters.") ?></div>
-        <?php endif; ?>
-    </div>
-    <?php if ($is_admin): ?>
-        <div class="mb-3">
-            <label class="form-label">Reset Password</label>
-            <input type="password" name="password" class="form-control" placeholder="Leave blank to keep current password">
-            <?php if (in_array("Password must be at least 6 characters.", $errors)): ?>
-                <div class="text-danger"><?= htmlspecialchars("Password must be at least 6 characters.") ?></div>
-            <?php endif; ?>
+        <div class="mb-3 text-center">
+            <img src="<?= $employee['profile_image'] ?: 'images/default.jpg'; ?>" class="img-thumbnail" width="150">
         </div>
-    <?php endif; ?>
-    <button type="submit" class="btn btn-primary">Save Changes</button>
-    <a href="dashboard.php" class="btn btn-secondary">Cancel</a>
-</form>
+        <div class="mb-3">
+            <label class="form-label">Profile Picture</label>
+            <input type="file" name="profile" class="form-control">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Full Name</label>
+            <input type="text" name="name" class="form-control" value="<?= htmlspecialchars($employee['employee_name']) ?>" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" value="<?= htmlspecialchars($employee['employee_email']) ?>" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Phone</label>
+            <input type="text" name="phone" class="form-control" value="<?= htmlspecialchars($employee['employee_phone']) ?>">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Date of Birth</label>
+            <input type="date" name="dob" class="form-control" value="<?= htmlspecialchars($employee['dob']) ?>">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Skills</label>
+            <textarea name="skills" class="form-control" rows="4"><?= htmlspecialchars($employee['employee_skills']) ?></textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Details</label>
+            <textarea name="details" class="form-control"><?= htmlspecialchars($employee['employee_details']) ?></textarea>
+        </div>
+
+        <?php if (($is_admin || $employee_id == $user_id) && $employee['status'] == 1): ?>
+            <div class="mb-3">
+                <label class="form-label">Reset Password</label>
+                <input type="password" name="password" class="form-control" placeholder="Leave blank to keep current password">
+            </div>
+        <?php endif; ?>
+
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a href="dashboard.php" class="btn btn-secondary">Cancel</a>
+    </form>
 </div>
 </body>
 </html>
