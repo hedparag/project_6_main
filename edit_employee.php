@@ -136,17 +136,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <body>
 <div class="container mt-5">
     <h2>Edit Employee</h2>
-
-    <!-- <?php if (!empty($errors)): ?>
-        <div class="alert alert-danger">
-            <ul>
-                <?php foreach ($errors as $error): ?>
-                    <li><?= htmlspecialchars($error) ?></li>
-                <?php endforeach; ?>
-            </ul>
-        </div>
-    <?php endif; ?> -->
-
     <form method="POST" enctype="multipart/form-data">
     <div class="mb-3 text-center">
         <img src="<?= $employee['profile_image'] ?: 'images/default.jpg'; ?>" class="img-thumbnail" width="150">
