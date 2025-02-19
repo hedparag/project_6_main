@@ -15,7 +15,9 @@ $user = $stmt->fetch(PDO::FETCH_ASSOC);
 $is_admin = ($user['user_type_id'] == 3); 
 
 if ($is_admin) {
-    $employees = $pdo->query("SELECT * FROM employees")->fetchAll();
+    $employees = $pdo->prepare("SELECT * FROM employees WHERE employee_id != ?");
+    $employees->execute([$user_id]);
+    $employees = $employees->fetchAll();
 } else {
     $employee_details = $pdo->prepare("SELECT * FROM employees WHERE employee_id = ?");
     $employee_details->execute([$user_id]);
@@ -29,10 +31,11 @@ if ($is_admin) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Employee Management System</title>
-    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     
 </head>
+<body>
 <body>
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -45,9 +48,11 @@ if ($is_admin) {
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item"><a class="nav-link" href="dashboard.php">Dashboard</a></li>
                 <?php if ($is_admin): ?>
-                    <li class="nav-item"><a class="nav-link" href="manage_employees.php">My Profile</a></li>
                     <li class="nav-item"><a class="nav-link" href="registration.php">Add Employee</a></li>
+                    
+                    <li class="nav-item"><a class="nav-link" href="admin_profile.php">Profile</a></li>
                 <?php else: ?>
+                    
                 <?php endif; ?>
                 <li class="nav-item"><a class="nav-link" href="logout.php">Logout</a></li>
             </ul>
@@ -125,4 +130,4 @@ if ($is_admin) {
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-</html>
+</html> 
