@@ -30,7 +30,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// include 'navbar.php';
 ?>
 
 <!DOCTYPE html>
@@ -39,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Profile</title>
-    <link rel="stylesheet" href="edit_profile.css">
+    <link rel="stylesheet" href="css/edit_profile.css">
 </head>
 <body>
     <div class="container mt-4">
